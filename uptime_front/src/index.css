@@ -1,0 +1,50 @@
+:root {
+  /* Color Palette */
+  --color-background: #111827;
+  /* gray-900 */
+  --color-surface: #1f2937;
+  /* gray-800 */
+  --color-primary: #6366f1;
+  /* indigo-500 */
+  --color-primary-hover: #4f46e5;
+  /* indigo-600 */
+  --color-text-main: #f3f4f6;
+  /* gray-100 */
+  --color-text-muted: #9ca3af;
+  /* gray-400 */
+  --color-border: #374151;
+  /* gray-700 */
+  --color-success: #22c55e;
+  /* green-500 */
+  --color-error: #ef4444;
+  /* red-500 */
+
+  /* Fonts */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
