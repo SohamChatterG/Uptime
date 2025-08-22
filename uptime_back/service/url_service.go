@@ -1,4 +1,3 @@
-// service/url_service.go
 package service
 
 import (

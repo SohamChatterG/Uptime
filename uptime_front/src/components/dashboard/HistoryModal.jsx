@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { apiFetch } from '../../api';
 import { Modal } from '../ui/Modal';
 import { Spinner } from '../ui/Spinner';
-import { CheckCircle2, XCircle, Clock, BarChart } from 'lucide-react';
-import { ResponseChart } from './ResponseChart'; // <-- Import the new chart
+import { CheckCircle2, XCircle, Clock, BarChart, LineChart, PieChart as PieChartIcon } from 'lucide-react';
+import { ResponseChart } from './ResponseChart';
+import { StatusPieChart } from './StatusPieChart';
 import styles from './HistoryModal.module.css';
 
-// A new component for displaying summary stats
 const StatCard = ({ icon, label, value }) => (
     <div className={styles.statCard}>
         <div className={styles.statIcon}>{icon}</div>
@@ -20,8 +20,8 @@ const StatCard = ({ icon, label, value }) => (
 export const HistoryModal = ({ isOpen, onClose, url }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeChart, setActiveChart] = useState('line'); // <-- 1. NEW STATE FOR TOGGLE
 
-    // Calculate summary stats once the history data is loaded
     const summaryStats = useMemo(() => {
         if (!history || history.length === 0) {
             return { uptime: 'N/A', avgResponse: 'N/A' };
@@ -41,7 +41,6 @@ export const HistoryModal = ({ isOpen, onClose, url }) => {
     useEffect(() => {
         if (isOpen && url) {
             setLoading(true);
-            // Fetch the last 200 checks to get more data for the chart
             apiFetch(`/api/urls/${url.id}/history?limit=200`)
                 .then(data => {
                     setHistory(data || []);
@@ -58,19 +57,39 @@ export const HistoryModal = ({ isOpen, onClose, url }) => {
         <Modal isOpen={isOpen} onClose={onClose} title={`Details for ${url?.name}`}>
             {loading ? <Spinner /> : (
                 <>
-                    {/* Summary Stats Section */}
                     <div className={styles.statsGrid}>
                         <StatCard icon={<BarChart />} label="Uptime (Last 200)" value={summaryStats.uptime} />
                         <StatCard icon={<Clock />} label="Avg. Response" value={summaryStats.avgResponse} />
                     </div>
 
-                    {/* The new chart component */}
-                    <ResponseChart data={history} />
+                    {/* --- 2. NEW TOGGLE BUTTONS --- */}
+                    <div className={styles.chartToggleContainer}>
+                        <button
+                            className={`${styles.chartToggleButton} ${activeChart === 'line' ? styles.active : ''}`}
+                            onClick={() => setActiveChart('line')}
+                        >
+                            <LineChart size={16} />
+                            <span>Response Time</span>
+                        </button>
+                        <button
+                            className={`${styles.chartToggleButton} ${activeChart === 'pie' ? styles.active : ''}`}
+                            onClick={() => setActiveChart('pie')}
+                        >
+                            <PieChartIcon size={16} />
+                            <span>Status Codes</span>
+                        </button>
+                    </div>
+
+                    {/* --- 3. CONDITIONAL RENDERING FOR CHARTS --- */}
+                    <div className={styles.chartDisplayArea}>
+                        {activeChart === 'line' && <ResponseChart data={history} />}
+                        {activeChart === 'pie' && <StatusPieChart data={history} />}
+                    </div>
 
                     <h3 className={styles.historyTitle}>Recent Checks</h3>
                     <div className={styles.historyContainer}>
                         <ul className={styles.historyList}>
-                            {history.length > 0 ? history.slice(0, 20).map(check => ( // Show last 20 checks in the list
+                            {history.length > 0 ? history.slice(0, 20).map(check => (
                                 <li key={check.id} className={styles.historyItem}>
                                     <div className={styles.historyItemMain}>
                                         {check.was_successful ? (

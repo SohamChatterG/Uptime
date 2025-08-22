@@ -31,7 +31,6 @@ func NewChecker(urlRepo *repository.URLRepository, userRepo *repository.UserRepo
 	}
 }
 
-// Start, runChecks, and checkURL functions remain the same, but we'll add the alert logic.
 func (c *Checker) Start() {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
@@ -100,7 +99,6 @@ func (c *Checker) checkURL(url model.Url, wg *sync.WaitGroup) {
 				subject = fmt.Sprintf("🔴 Alert: Your site '%s' is down!", url.Name)
 				message = fmt.Sprintf("This is an automated alert to inform you that your monitored URL '%s' (%s) is currently down.", url.Name, url.URL)
 			}
-			// 3. Call the new SendNotification method
 			c.notifySvc.SendNotification(user.Email, subject, message)
 		}
 

@@ -11,12 +11,18 @@ func SetupRoutes(
 	r *mux.Router,
 	userHandler *handler.UserHandler,
 	urlHandler *handler.URLHandler,
+	oauthHandler *handler.OAuthHandler,
 	authMiddleware func(http.Handler) http.Handler,
 ) {
-	// Public routes for authentication
+	// routes for authentication
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/register", userHandler.Register).Methods("POST")
 	authRouter.HandleFunc("/login", userHandler.Login).Methods("POST")
+
+	authRouter.HandleFunc("/google/login", oauthHandler.GoogleLogin).Methods("GET")
+	authRouter.HandleFunc("/google/callback", oauthHandler.GoogleCallback).Methods("GET")
+	authRouter.HandleFunc("/github/login", oauthHandler.GithubLogin).Methods("GET")
+	authRouter.HandleFunc("/github/callback", oauthHandler.GithubCallback).Methods("GET")
 
 	// Protected API routes
 	apiRouter := r.PathPrefix("/api").Subrouter()

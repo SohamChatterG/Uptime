@@ -10,13 +10,17 @@ import (
 )
 
 type Config struct {
-	Port          string
-	MongoURI      string
-	DBName        string
-	JWTSecret     string
-	CheckInterval time.Duration
-	EmailUser     string
-	EmailPass     string
+	Port               string
+	MongoURI           string
+	DBName             string
+	JWTSecret          string
+	CheckInterval      time.Duration
+	EmailUser          string
+	EmailPass          string
+	GoogleClientID     string
+	GoogleClientSecret string
+	GitHubClientID     string
+	GitHubClientSecret string
 }
 
 func LoadConfig() *Config {
@@ -42,12 +46,16 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		Port:          port,
-		MongoURI:      os.Getenv("MONGODB_URI"),
-		DBName:        os.Getenv("DB_NAME"),
-		JWTSecret:     os.Getenv("JWT_SECRET"),
-		CheckInterval: time.Duration(interval) * time.Second,
-		EmailUser:     emailUser,
-		EmailPass:     emailPass,
+		Port:               port,
+		MongoURI:           os.Getenv("MONGODB_URI"),
+		DBName:             os.Getenv("DB_NAME"),
+		JWTSecret:          os.Getenv("JWT_SECRET"),
+		CheckInterval:      time.Duration(interval) * time.Second,
+		EmailUser:          emailUser,
+		EmailPass:          emailPass,
+		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		GitHubClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+		GitHubClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
 	}
 }

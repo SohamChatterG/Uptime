@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/SohamChatterG/uptime/auth"
 	"github.com/SohamChatterG/uptime/model"
@@ -61,5 +62,31 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 		return "", errors.New("invalid credentials")
 	}
 
+	return s.jwtSvc.GenerateToken(user)
+}
+
+func (s *UserService) FindOrCreateUser(ctx context.Context, email, name string) (string, error) {
+	user, err := s.userRepo.FindByEmail(ctx, email)
+
+	// If user does not exist, create a new one.
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Printf("User with email %s not found. Creating new user.", email)
+			newUser := &model.User{
+				Name:     name,
+				Email:    email,
+				Password: "", // No password for OAuth users
+			}
+			if err := s.userRepo.Create(ctx, newUser); err != nil {
+				return "", err
+			}
+			user = newUser
+		} else {
+			// A different database error occurred
+			return "", err
+		}
+	}
+
+	// User exists or was just created, generate a JWT for them.
 	return s.jwtSvc.GenerateToken(user)
 }
