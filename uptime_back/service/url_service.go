@@ -54,7 +54,7 @@ func (s *URLService) GetURLHistory(ctx context.Context, urlIDStr string, userID 
 		return nil, errors.New("invalid url id format")
 	}
 
-	// First, verify the user owns this URL before returning its history
+	// verify the user owns this URL before returning its history
 	_, err = s.urlRepo.FindByIDAndUser(ctx, urlID, userID)
 	if err != nil {
 		return nil, errors.New("url not found or access denied")

@@ -18,21 +18,18 @@ func NewURLHandler(svc *service.URLService) *URLHandler {
 	return &URLHandler{urlService: svc}
 }
 
-// Helper to write JSON error responses
 func writeError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
-// Helper to write successful JSON responses
 func writeJSON(w http.ResponseWriter, data interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
 }
 
-// Helper to get user ID from context
 func getUserIDFromContext(r *http.Request) (primitive.ObjectID, bool) {
 	userIDStr, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {

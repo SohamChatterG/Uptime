@@ -5,7 +5,7 @@ import (
 
 	"github.com/SohamChatterG/uptime/model"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive" // <-- 1. ADD THIS IMPORT
+	"go.mongodb.org/mongo-driver/bson/primitive" 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -26,7 +26,7 @@ func (r *CheckRepository) Create(ctx context.Context, check *model.Check) error 
 }
 
 func (r *CheckRepository) GetHistoryForURL(ctx context.Context, urlID string, limit int64) ([]model.Check, error) {
-	// 2. CHANGE THE FUNCTION CALL HERE
+	// CHANGE THE FUNCTION CALL HERE
 	objID, err := primitive.ObjectIDFromHex(urlID)
 	if err != nil {
 		return nil, err

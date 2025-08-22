@@ -15,6 +15,8 @@ type Config struct {
 	DBName        string
 	JWTSecret     string
 	CheckInterval time.Duration
+	EmailUser     string
+	EmailPass     string
 }
 
 func LoadConfig() *Config {
@@ -27,32 +29,25 @@ func LoadConfig() *Config {
 		port = "8080"
 	}
 
-	mongoURI := os.Getenv("MONGODB_URI")
-	if mongoURI == "" {
-		log.Fatal("FATAL: MONGODB_URI environment variable is not set")
-	}
-
-	dbName := os.Getenv("DB_NAME")
-	if dbName == "" {
-		log.Fatal("FATAL: DB_NAME environment variable is not set")
-	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		log.Fatal("FATAL: JWT_SECRET environment variable is not set")
-	}
-
 	intervalStr := os.Getenv("CHECK_INTERVAL_SECONDS")
 	interval, err := strconv.Atoi(intervalStr)
 	if err != nil || interval <= 0 {
 		interval = 60
 	}
 
+	emailUser := os.Getenv("EMAIL_USER")
+	emailPass := os.Getenv("EMAIL_PASS")
+	if emailUser == "" || emailPass == "" {
+		log.Println("WARNING: EMAIL_USER or EMAIL_PASS not set. Email notifications will be disabled.")
+	}
+
 	return &Config{
 		Port:          port,
-		MongoURI:      mongoURI,
-		DBName:        dbName,
-		JWTSecret:     jwtSecret,
+		MongoURI:      os.Getenv("MONGODB_URI"),
+		DBName:        os.Getenv("DB_NAME"),
+		JWTSecret:     os.Getenv("JWT_SECRET"),
 		CheckInterval: time.Duration(interval) * time.Second,
+		EmailUser:     emailUser,
+		EmailPass:     emailPass,
 	}
 }

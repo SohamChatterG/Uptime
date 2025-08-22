@@ -13,7 +13,7 @@ import (
 	"github.com/SohamChatterG/uptime/router"
 	"github.com/SohamChatterG/uptime/service"
 	"github.com/SohamChatterG/uptime/worker"
-	"github.com/gorilla/handlers" // <-- 1. IMPORT THE NEW PACKAGE
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -39,6 +39,7 @@ func main() {
 	// Services
 	userService := service.NewUserService(userRepo, jwtService)
 	urlService := service.NewURLService(urlRepo, checkRepo)
+	gmailService := service.NewGmailService(cfg.EmailUser, cfg.EmailPass)
 
 	// Handlers
 	userHandler := handler.NewUserHandler(userService)
@@ -52,19 +53,19 @@ func main() {
 	router.SetupRoutes(mainRouter, userHandler, urlHandler, authMiddleware)
 
 	// 5. Start the Background Worker
-	checker := worker.NewChecker(urlRepo, checkRepo, cfg.CheckInterval)
+	// --- THIS IS THE CORRECTED LINE ---
+	// It now passes all 5 required arguments.
+	checker := worker.NewChecker(urlRepo, userRepo, checkRepo, gmailService, cfg.CheckInterval)
 	go checker.Start()
 	log.Println("Background uptime checker started.")
 
-	// --- 6. CONFIGURE CORS ---
-	// This tells the backend to allow requests from your React frontend.
+	// 6. CONFIGURE CORS
 	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:5173"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 	allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
 
-	// 7. Start Server with the CORS middleware wrapping the main router
+	// 7. Start Server
 	log.Printf("Server starting on port %s", cfg.Port)
-	// The handlers.CORS middleware will add the required headers to each response.
 	if err := http.ListenAndServe(":"+cfg.Port, handlers.CORS(allowedOrigins, allowedMethods, allowedHeaders)(mainRouter)); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/SohamChatterG/uptime/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -28,6 +29,15 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*model.
 	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) FindByID(ctx context.Context, userID primitive.ObjectID) (*model.User, error) {
+	var user model.User
+	err := r.collection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		return nil, err // This will be mongo.ErrNoDocuments if not found
 	}
 	return &user, nil
 }

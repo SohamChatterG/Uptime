@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -9,36 +10,37 @@ import (
 
 	"github.com/SohamChatterG/uptime/model"
 	"github.com/SohamChatterG/uptime/repository"
+	"github.com/SohamChatterG/uptime/service"
 )
 
 type Checker struct {
 	urlRepo   *repository.URLRepository
+	userRepo  *repository.UserRepository
 	checkRepo *repository.CheckRepository
+	notifySvc *service.GmailService
 	interval  time.Duration
 }
 
-func NewChecker(urlRepo *repository.URLRepository, checkRepo *repository.CheckRepository, interval time.Duration) *Checker {
+func NewChecker(urlRepo *repository.URLRepository, userRepo *repository.UserRepository, checkRepo *repository.CheckRepository, notifySvc *service.GmailService, interval time.Duration) *Checker { // <-- 2. CHANGE THIS from NotificationService
 	return &Checker{
 		urlRepo:   urlRepo,
+		userRepo:  userRepo,
 		checkRepo: checkRepo,
+		notifySvc: notifySvc,
 		interval:  interval,
 	}
 }
 
-// Start begins the periodic checking process.
+// Start, runChecks, and checkURL functions remain the same, but we'll add the alert logic.
 func (c *Checker) Start() {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
-
-	// Run once immediately on start, then wait for the ticker.
 	c.runChecks()
-
 	for range ticker.C {
 		c.runChecks()
 	}
 }
 
-// runChecks fetches all active URLs and checks them concurrently.
 func (c *Checker) runChecks() {
 	log.Println("Running uptime checks...")
 	urls, err := c.urlRepo.GetAllActive(context.Background())
@@ -46,7 +48,6 @@ func (c *Checker) runChecks() {
 		log.Printf("Error fetching URLs for checking: %v", err)
 		return
 	}
-
 	var wg sync.WaitGroup
 	for _, url := range urls {
 		wg.Add(1)
@@ -56,14 +57,10 @@ func (c *Checker) runChecks() {
 	log.Println("Uptime checks finished.")
 }
 
-// checkURL performs an HTTP request for a single URL and logs the result.
 func (c *Checker) checkURL(url model.Url, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	client := http.Client{
-		Timeout: 10 * time.Second,
-	}
-
+	client := http.Client{Timeout: 10 * time.Second}
 	start := time.Now()
 	resp, err := client.Get(url.URL)
 	duration := time.Since(start).Milliseconds()
@@ -76,27 +73,39 @@ func (c *Checker) checkURL(url model.Url, wg *sync.WaitGroup) {
 	}
 
 	if err != nil {
-		log.Printf("URL DOWN: %s (Error: %v)", url.URL, err)
 		check.WasSuccessful = false
 		check.StatusCode = 0
 	} else {
 		defer resp.Body.Close()
-		log.Printf("URL CHECK: %s (Status: %s)", url.URL, resp.Status)
 		check.WasSuccessful = resp.StatusCode >= 200 && resp.StatusCode < 300
 		check.StatusCode = resp.StatusCode
 	}
 
-	// Create the check record in the database
 	if err := c.checkRepo.Create(context.Background(), check); err != nil {
 		log.Printf("Error saving check result for %s: %v", url.URL, err)
 	}
 
-	// Update the URL's last known status if it has changed
 	if url.Status != check.WasSuccessful {
 		log.Printf("STATUS CHANGE: %s is now %s", url.URL, map[bool]string{true: "UP", false: "DOWN"}[check.WasSuccessful])
+
+		user, err := c.userRepo.FindByID(context.Background(), url.UserID)
+		if err != nil {
+			log.Printf("Could not find user %s to send alert for URL %s", url.UserID.Hex(), url.Name)
+		} else {
+			var subject, message string
+			if check.WasSuccessful {
+				subject = fmt.Sprintf("✅ Resolved: Your site '%s' is back up!", url.Name)
+				message = fmt.Sprintf("Good news! Your monitored URL '%s' (%s) has recovered and is now back online.", url.Name, url.URL)
+			} else {
+				subject = fmt.Sprintf("🔴 Alert: Your site '%s' is down!", url.Name)
+				message = fmt.Sprintf("This is an automated alert to inform you that your monitored URL '%s' (%s) is currently down.", url.Name, url.URL)
+			}
+			// 3. Call the new SendNotification method
+			c.notifySvc.SendNotification(user.Email, subject, message)
+		}
+
 		if err := c.urlRepo.UpdateStatus(context.Background(), url.ID, check.WasSuccessful); err != nil {
 			log.Printf("Error updating URL status for %s: %v", url.URL, err)
 		}
-		// In a real application, you would trigger an email/webhook alert here!
 	}
 }
