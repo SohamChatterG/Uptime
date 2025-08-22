@@ -5,7 +5,6 @@ import { apiFetch } from '../../api';
 import { Spinner } from '../ui/Spinner';
 import styles from './AuthForm.module.css';
 
-// In a real app, this would be in a config file or .env
 const API_BASE_URL = 'http://localhost:8080';
 
 const Feature = ({ icon, title, description }) => (

@@ -2,7 +2,6 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import styles from './ResponseChart.module.css';
 
-// A custom tooltip to match our UI style
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
@@ -16,15 +15,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export const ResponseChart = ({ data }) => {
-    // Recharts needs the data in a specific format. We process it here.
     const chartData = data
-        // We only want to chart successful checks that have a response time
         .filter(item => item.was_successful)
-        // Reverse the array to show oldest to newest (left to right)
         .reverse()
-        // Format the data for the chart
         .map(item => ({
-            // Format the timestamp to be more readable
             time: new Date(item.checked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             responseTime: item.response_time_ms,
         }));
@@ -35,14 +29,13 @@ export const ResponseChart = ({ data }) => {
 
     return (
         <div className={styles.chartContainer}>
-            {/* The ResponsiveContainer makes the chart fill its parent div */}
             <ResponsiveContainer width="100%" height={250}>
                 <LineChart
                     data={chartData}
                     margin={{
                         top: 5,
                         right: 20,
-                        left: -10, // Adjust to make Y-axis labels fit
+                        left: -10,
                         bottom: 5,
                     }}
                 >
@@ -55,8 +48,7 @@ export const ResponseChart = ({ data }) => {
                         type="monotone"
                         dataKey="responseTime"
                         name="Response Time (ms)"
-                        stroke="#818cf8" // A nice indigo color
-                        strokeWidth={2}
+                        stroke="#818cf8"
                         dot={{ r: 3 }}
                         activeDot={{ r: 6 }}
                     />

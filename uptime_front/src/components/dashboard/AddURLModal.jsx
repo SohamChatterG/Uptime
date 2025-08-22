@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { apiFetch } from '../../api';
 import { Modal } from '../ui/Modal';
-import styles from './Dashboard.module.css'; // Re-use some styles
 
 export const AddURLModal = ({ isOpen, onClose, onUrlAdded }) => {
     const [name, setName] = useState('');
@@ -22,7 +21,6 @@ export const AddURLModal = ({ isOpen, onClose, onUrlAdded }) => {
             onClose();
         } catch (error) {
             console.error("Failed to add URL", error);
-            // In a real app, show an error toast
         } finally {
             setLoading(false);
         }
